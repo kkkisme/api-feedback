@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API Feedback SDK Demo</title>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: #1f2937;
+        background: #f3f5f8;
+        font-family:
+          ui-sans-serif,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+
+      main {
+        width: min(920px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 56px 0;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 5vw, 44px);
+        line-height: 1.1;
+      }
+
+      p {
+        color: #667085;
+        line-height: 1.7;
+      }
+
+      .panel {
+        margin-top: 32px;
+        padding: 24px;
+        background: #fff;
+        border: 1px solid #d8dde6;
+        border-radius: 8px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+
+      button {
+        min-height: 40px;
+        padding: 0 16px;
+        border: 1px solid #0b57d0;
+        border-radius: 6px;
+        color: #fff;
+        background: #0b57d0;
+        cursor: pointer;
+      }
+
+      .business-errors {
+        margin-top: 24px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .business-errors__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid #d8dde6;
+      }
+
+      .business-errors__header h2 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+      }
+
+      .business-errors__count {
+        min-width: 44px;
+        padding: 2px 8px;
+        color: #ba1a1a;
+        background: #fff4f4;
+        border: 1px solid rgba(186, 26, 26, 0.18);
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        line-height: 18px;
+        text-align: center;
+      }
+
+      .business-errors__body {
+        display: grid;
+        gap: 0;
+        padding: 0 18px;
+      }
+
+      .business-errors__empty {
+        margin: 0;
+        padding: 18px 0;
+        color: #667085;
+      }
+
+      .business-error {
+        display: grid;
+        gap: 10px;
+        padding: 16px 0;
+        border-top: 1px solid #edf0f4;
+      }
+
+      .business-error:first-child {
+        border-top: 0;
+      }
+
+      .business-error__main {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .business-error__code {
+        color: #ba1a1a;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 20px;
+      }
+
+      .business-error__message {
+        color: #1f2937;
+        font-size: 14px;
+        line-height: 20px;
+      }
+
+      .business-error__meta {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .business-error__meta-item {
+        min-width: 0;
+        color: #667085;
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      .business-error__meta-item strong {
+        color: #344054;
+        font-weight: 600;
+      }
+
+      .payload {
+        margin-top: 24px;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .payload__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid #d8dde6;
+      }
+
+      .payload__header h2 {
+        margin: 0;
+        font-size: 16px;
+        line-height: 24px;
+      }
+
+      .payload__body {
+        display: grid;
+        gap: 14px;
+        padding: 18px;
+      }
+
+      .payload__empty {
+        margin: 0;
+        color: #667085;
+      }
+
+      .payload__grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .payload__item {
+        padding: 12px;
+        border: 1px solid #d8dde6;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .payload__label {
+        display: block;
+        margin-bottom: 6px;
+        color: #667085;
+        font-size: 12px;
+      }
+
+      .payload__value {
+        overflow: hidden;
+        color: #1f2937;
+        font-size: 14px;
+        font-weight: 600;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .payload__pre {
+        max-height: 360px;
+        margin: 0;
+        overflow: auto;
+        padding: 14px;
+        color: #d6e4ff;
+        background: #111827;
+        border-radius: 8px;
+        font-size: 12px;
+        line-height: 18px;
+      }
+
+      @media (max-width: 760px) {
+        .business-error__meta {
+          grid-template-columns: 1fr;
+        }
+
+        .payload__grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>API Feedback SDK Demo</h1>
+      <p>点击按钮模拟一个业务接口失败。SDK 不会按 HTTP 状态自动弹出反馈，只有业务回调返回 true 或 reason 对象时才会出现提示。</p>
+      <section class="panel actions">
+        <button id="trigger-1">模拟失败1</button>
+        <button id="trigger-2">模拟失败2</button>
+      </section>
+      <section class="panel business-errors" aria-live="polite">
+        <div class="business-errors__header">
+          <h2>业务错误</h2>
+          <span class="business-errors__count" id="business-error-count">0 条</span>
+        </div>
+        <div class="business-errors__body" id="business-error-output">
+          <p class="business-errors__empty">点击模拟失败按钮后，这里会展示业务接口返回的错误。</p>
+        </div>
+      </section>
+      <section class="panel payload" aria-live="polite">
+        <div class="payload__header">
+          <h2>提交参数</h2>
+        </div>
+        <div class="payload__body" id="payload-output">
+          <p class="payload__empty">提交反馈后，这里会展示 SDK 准备发送给后端的参数。</p>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
