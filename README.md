@@ -409,10 +409,35 @@ demo 包含：
 
 可以连续点击两个模拟按钮，再提交一次反馈，观察 `metadata.apiError` 数组里会包含两条业务错误。
 
+### 部署到 Vercel
+
+先构建 example：
+
+```bash
+npm run build:example
+```
+
+部署预览环境：
+
+```bash
+npm run deploy:example
+```
+
+部署生产环境：
+
+```bash
+npm run deploy:example:prod
+```
+
+部署命令会先把 `examples/vanilla` 构建到 `dist-example/`，再通过 Vercel CLI 上传该目录。第一次执行时，Vercel CLI 会要求登录并选择或创建项目。
+
 ## 开发命令
 
 ```bash
 npm run dev
+npm run build:example
+npm run deploy:example
+npm run deploy:example:prod
 npm run typecheck
 npm run test
 npm run build

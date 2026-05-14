@@ -21,7 +21,10 @@
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "dev": "vite examples/vanilla --host 0.0.0.0"
+    "dev": "vite examples/vanilla --host 0.0.0.0",
+    "build:example": "vite build examples/vanilla --outDir ../../dist-example --emptyOutDir",
+    "deploy:example": "npm run build:example && npx --yes vercel@latest dist-example",
+    "deploy:example:prod": "npm run build:example && npx --yes vercel@latest dist-example --prod"
   },
   "keywords": [
     "feedback",
