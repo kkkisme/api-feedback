@@ -7,6 +7,10 @@ const closeIconSvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-x-icon lucide-x" aria-hidden="true" focusable="false"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
 `;
 
+const minimizeIconSvg = `
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-icon lucide-minus" aria-hidden="true" focusable="false"><path d="M5 12h14"/></svg>
+`;
+
 const trashIconSvg = `
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-trash2-icon lucide-trash-2" aria-hidden="true" focusable="false"><path d="M10 11v6"/><path d="M14 11v6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
 `;
@@ -26,10 +30,13 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
       <button class="af-toast__close" type="button" aria-label="关闭提示">${closeIconSvg}</button>
     </div>
     <div class="af-backdrop"></div>
-    <aside class="af-drawer" role="dialog" aria-modal="true" aria-labelledby="af-drawer-title">
+    <aside class="af-drawer" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="af-drawer-title">
       <header class="af-drawer__header">
         <h2 class="af-drawer__title" id="af-drawer-title"></h2>
-        <button class="af-icon-button" type="button" aria-label="关闭">${closeIconSvg}</button>
+        <div class="af-drawer__actions">
+          <button class="af-icon-button af-minimize" type="button" aria-label="最小化">${minimizeIconSvg}</button>
+          <button class="af-icon-button af-close" type="button" aria-label="关闭">${closeIconSvg}</button>
+        </div>
       </header>
       <div class="af-drawer__body">
         <div class="af-form-view">
@@ -63,6 +70,10 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
         <button class="af-button af-button--primary af-submit" type="button"></button>
       </footer>
     </aside>
+    <button class="af-minimized" type="button" hidden>
+      <span class="af-minimized__title"></span>
+      <span class="af-minimized__action">继续填写</span>
+    </button>
     <div class="af-image-viewer" role="dialog" aria-modal="true" aria-label="查看截图" aria-hidden="true">
       <button class="af-image-viewer__close" type="button" aria-label="关闭截图预览">${closeIconSvg}</button>
       <img class="af-image-viewer__image" alt="屏幕截图大图" />
@@ -78,12 +89,15 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
   const toastClose = getElement<HTMLButtonElement>(shadow, '.af-toast__close');
   const backdrop = getElement<HTMLElement>(shadow, '.af-backdrop');
   const drawer = getElement<HTMLElement>(shadow, '.af-drawer');
+  const minimizedButton = getElement<HTMLButtonElement>(shadow, '.af-minimized');
+  const minimizedTitle = getElement<HTMLElement>(shadow, '.af-minimized__title');
   const drawerTitle = getElement<HTMLElement>(shadow, '.af-drawer__title');
   const formView = getElement<HTMLElement>(shadow, '.af-form-view');
   const successView = getElement<HTMLElement>(shadow, '.af-success-view');
   const successTitle = getElement<HTMLElement>(shadow, '.af-success-title');
   const successDescription = getElement<HTMLElement>(shadow, '.af-success-description');
-  const closeButton = getElement<HTMLButtonElement>(shadow, '.af-icon-button');
+  const minimizeButton = getElement<HTMLButtonElement>(shadow, '.af-minimize');
+  const closeButton = getElement<HTMLButtonElement>(shadow, '.af-close');
   const textarea = getElement<HTMLTextAreaElement>(shadow, '.af-textarea');
   const label = getElement<HTMLElement>(shadow, '.af-label');
   const privacy = getElement<HTMLElement>(shadow, '.af-privacy');
@@ -106,6 +120,7 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
   };
 
   drawerTitle.textContent = labels.drawerTitle;
+  minimizedTitle.textContent = labels.drawerTitle;
   toastText.textContent = labels.toastText;
   toastAction.textContent = labels.toastAction;
   label.textContent = labels.feedbackLabel;
@@ -118,10 +133,13 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
   successDescription.textContent = labels.submitSuccessDescription;
 
   toastAction.addEventListener('click', () => {
+    const shouldPreserveForm = !minimizedButton.hidden;
     closeToast(false);
-    openDrawer();
+    openDrawer(shouldPreserveForm);
   });
   toastClose.addEventListener('click', () => closeToast(true));
+  minimizedButton.addEventListener('click', () => openDrawer(true));
+  minimizeButton.addEventListener('click', () => minimizeDrawer());
   closeButton.addEventListener('click', () => closeDrawer());
   captureButton.addEventListener('click', () => void handleCapture());
   previewButton.addEventListener('click', () => openImageViewer());
@@ -146,6 +164,7 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
       return;
     }
 
+    syncToastOffset();
     toast.classList.add('is-visible');
   }
 
@@ -157,19 +176,42 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
     }
   }
 
-  function openDrawer(): void {
-    showFormView();
-    backdrop.classList.add('is-open');
+  function openDrawer(preserveView = false): void {
+    if (!preserveView) {
+      showFormView();
+      status.textContent = '';
+      status.className = 'af-status';
+    }
+
+    hideMinimizedButton();
     drawer.classList.add('is-open');
-    status.textContent = '';
-    status.className = 'af-status';
+    drawer.setAttribute('aria-hidden', 'false');
     textarea.focus();
+  }
+
+  function minimizeDrawer(): void {
+    drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    minimizedButton.hidden = false;
+    syncToastOffset();
+    minimizedButton.focus();
   }
 
   function closeDrawer(): void {
     backdrop.classList.remove('is-open');
     drawer.classList.remove('is-open');
+    drawer.setAttribute('aria-hidden', 'true');
+    hideMinimizedButton();
     clearPendingErrors();
+  }
+
+  function hideMinimizedButton(): void {
+    minimizedButton.hidden = true;
+    syncToastOffset();
+  }
+
+  function syncToastOffset(): void {
+    toast.classList.toggle('is-offset', !minimizedButton.hidden);
   }
 
   async function handleCapture(): Promise<void> {
@@ -278,14 +320,17 @@ export function mountFeedbackUi(state: ApiFeedbackState): FeedbackUiHandle {
 
   function showFormView(): void {
     drawer.classList.remove('is-success');
+    minimizeButton.hidden = false;
     formView.hidden = false;
     successView.hidden = true;
   }
 
   function showSuccessView(): void {
     drawer.classList.add('is-success');
+    minimizeButton.hidden = true;
     formView.hidden = true;
     successView.hidden = false;
+    hideMinimizedButton();
     closeButton.focus();
   }
 

@@ -149,7 +149,7 @@ describe('installApiFeedback', () => {
     backdrop.click();
     expect(drawer.classList.contains('is-open')).toBe(true);
 
-    shadow.querySelector<HTMLButtonElement>('.af-icon-button')!.click();
+    shadow.querySelector<HTMLButtonElement>('.af-close')!.click();
 
     expect(getVisibleToasts()).toHaveLength(0);
 
@@ -219,7 +219,37 @@ describe('installApiFeedback', () => {
     });
   });
 
-  it('shows a success view and keeps the header close button as the only drawer close action', async () => {
+  it('minimizes the drawer and restores the current draft', () => {
+    controller = installApiFeedback({
+      appId: 'order-center',
+      submit: async (_payload: ApiFeedbackSubmitPayload) => undefined
+    });
+
+    controller.openFeedback();
+
+    const shadow = getShadowRoot();
+    const drawer = shadow.querySelector<HTMLElement>('.af-drawer')!;
+    const textarea = shadow.querySelector<HTMLTextAreaElement>('.af-textarea')!;
+    const minimizeButton = shadow.querySelector<HTMLButtonElement>('.af-minimize')!;
+    const minimizedButton = shadow.querySelector<HTMLButtonElement>('.af-minimized')!;
+
+    textarea.value = '我先写一半，稍后继续。';
+    minimizeButton.click();
+
+    expect(drawer.classList.contains('is-open')).toBe(false);
+    expect(drawer.getAttribute('aria-hidden')).toBe('true');
+    expect(minimizedButton.hidden).toBe(false);
+    expect(textarea.value).toBe('我先写一半，稍后继续。');
+
+    minimizedButton.click();
+
+    expect(drawer.classList.contains('is-open')).toBe(true);
+    expect(drawer.getAttribute('aria-hidden')).toBe('false');
+    expect(minimizedButton.hidden).toBe(true);
+    expect(textarea.value).toBe('我先写一半，稍后继续。');
+  });
+
+  it('shows a success view and keeps the header close button as the drawer close action', async () => {
     const submit = vi.fn(async (_payload: ApiFeedbackSubmitPayload) => undefined);
 
     controller = installApiFeedback({
@@ -235,7 +265,10 @@ describe('installApiFeedback', () => {
     const successView = shadow.querySelector<HTMLElement>('.af-success-view')!;
     const textarea = shadow.querySelector<HTMLTextAreaElement>('.af-textarea')!;
     const submitButton = shadow.querySelector<HTMLButtonElement>('.af-submit')!;
-    const headerClose = shadow.querySelector<HTMLButtonElement>('.af-icon-button')!;
+    const headerMinimize = shadow.querySelector<HTMLButtonElement>('.af-minimize')!;
+    const headerClose = shadow.querySelector<HTMLButtonElement>('.af-close')!;
+
+    expect(headerMinimize.hidden).toBe(false);
 
     textarea.value = '提交后留在成功界面。';
     submitButton.click();
@@ -247,6 +280,8 @@ describe('installApiFeedback', () => {
     expect(drawer.classList.contains('is-success')).toBe(true);
     expect(formView.hidden).toBe(true);
     expect(successView.hidden).toBe(false);
+    expect(headerMinimize.hidden).toBe(true);
+    expect(getComputedStyle(headerMinimize).display).toBe('none');
     expect(shadow.querySelector('.af-success-close')).toBeNull();
 
     headerClose.click();

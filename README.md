@@ -67,7 +67,7 @@ feedback.setUserInfo({
 出现错误？ 立即反馈！
 ```
 
-用户点击「立即反馈！」后会打开右侧反馈侧边栏，可以输入问题、截取当前标签页截图并提交。
+用户点击「立即反馈！」后会打开页面右下角的悬浮反馈窗，可以输入问题、截取当前标签页截图并提交。
 
 ## 重要原则
 
@@ -127,7 +127,7 @@ feedback.clearUserInfo();
 
 ### `feedback.openFeedback(context?)`
 
-手动打开反馈侧边栏。可选传入一段接口上下文，适合非自动拦截场景。
+手动打开右下角悬浮反馈窗。可选传入一段接口上下文，适合非自动拦截场景。
 
 ```ts
 feedback.openFeedback({
@@ -312,7 +312,7 @@ interface ApiFeedbackSubmitPayload {
 
 - `formData`：浏览器原生 `FormData` 实例，里面已经包含 `feedbackText`、`metadata` 和可选的 `screenshot`，适合直接上传到后端。
 - `metadata`：结构化对象，内容和 `formData` 里的 `metadata` JSON 字符串一致，方便自定义提交前读取、调试或上报到非表单通道。
-- `feedbackText`：用户在反馈侧边栏输入的问题描述。
+- `feedbackText`：用户在反馈浮窗输入的问题描述。
 - `screenshot`：用户截取的 PNG 图片 Blob；未截图时为空。
 
 如果使用 `fetch` 直接提交 `formData`，不要手动设置 `Content-Type`，浏览器会自动补齐 `multipart/form-data` 的 boundary。
@@ -365,7 +365,7 @@ interface ApiFeedbackSubmitPayload {
 navigator.mediaDevices.getDisplayMedia(...)
 ```
 
-当前实现会尽量引导用户选择当前标签页，并在截图时临时隐藏 SDK 的 toast、遮罩和反馈侧边栏，避免把反馈面板截进去。
+当前实现会尽量引导用户选择当前标签页，并在截图时临时隐藏 SDK 的 toast 和反馈浮窗，避免把反馈面板截进去。
 
 注意：
 
@@ -377,12 +377,12 @@ navigator.mediaDevices.getDisplayMedia(...)
 
 ## UI 行为
 
-- 反馈 toast 位于页面右下角。
-- toast 左侧红色边框提示错误，文案为「出现错误？」。
-- 「立即反馈！」是蓝色下划线文字，可点击打开侧边栏。
+- 业务错误触发的 toast 会显示在页面右下角，文案为「出现错误？」。
+- 「立即反馈！」是蓝色下划线文字，可点击打开右下角悬浮反馈窗。
 - toast 可通过右侧关闭按钮关闭；关闭后会丢弃当前待反馈错误队列。
-- 反馈侧边栏只能通过右上角关闭按钮关闭。
-- 提交成功后，侧边栏展示成功信息，仍然通过右上角按钮关闭。
+- 反馈浮窗右上角提供最小化和关闭按钮；最小化会保留已填写内容和截图，并在右下角显示「继续填写」恢复入口。
+- 关闭按钮会收起浮窗并丢弃当前待反馈错误队列。
+- 提交成功后，反馈浮窗展示成功信息，此时只保留右上角关闭按钮。
 - 截图预览可以点击查看大图。
 - 截图右上角有红色删除按钮，可以移除截图。
 
