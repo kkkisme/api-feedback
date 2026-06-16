@@ -1,5 +1,5 @@
 {
-  "name": "@api-feedback/sdk",
+  "name": "@linsy-utils/api-feedback",
   "version": "0.1.0",
   "description": "Framework-agnostic API error feedback SDK with business-defined feedback triggers.",
   "type": "module",
@@ -17,10 +17,14 @@
     "dist",
     "README.md"
   ],
+  "publishConfig": {
+    "registry": "https://packages.aliyun.com/6225cb2d83c8804f094d3937/npm/npm-registry/"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
     "dev": "vite examples/vanilla --host 0.0.0.0",
     "build:example": "vite build examples/vanilla --outDir ../../dist-example --emptyOutDir",
     "deploy:example": "npm run build:example && npx --yes vercel@latest dist-example",

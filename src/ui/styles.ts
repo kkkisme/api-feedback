@@ -43,8 +43,8 @@ svg {
 
 .af-toast {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  top: 24px;
+  left: 50%;
   z-index: 2147483646;
   display: none;
   align-items: center;
@@ -57,8 +57,8 @@ svg {
   border: 1px solid var(--af-line);
   border-radius: 12px;
   box-shadow: var(--af-soft-shadow);
-  transform: translateY(12px) scale(0.98);
-  transform-origin: bottom right;
+  transform: translate(-50%, -12px) scale(0.98);
+  transform-origin: top center;
   opacity: 0;
   transition: opacity 160ms ease, transform 160ms ease;
 }
@@ -75,11 +75,7 @@ svg {
 .af-toast.is-visible {
   display: flex;
   opacity: 1;
-  transform: translateY(0) scale(1);
-}
-
-.af-toast.is-offset {
-  bottom: 78px;
+  transform: translate(-50%, 0) scale(1);
 }
 
 .af-toast__text {
@@ -633,13 +629,9 @@ svg {
 
 @media (max-width: 520px) {
   .af-toast {
-    right: 12px;
-    bottom: 12px;
+    top: 12px;
+    left: 50%;
     max-width: calc(100vw - 24px);
-  }
-
-  .af-toast.is-offset {
-    bottom: 68px;
   }
 
   .af-drawer {
